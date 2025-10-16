@@ -1,29 +1,51 @@
 import React, { useState } from 'react';
-import { User, LogOut, Users, BarChart3, Calendar, Check, X, AlertCircle, Plus, Trash2, Edit2, BookOpen, Lock, Eye, EyeOff } from 'lucide-react';
+import {
+  User,
+  LogOut,
+  Users,
+  BarChart3,
+  Check,
+  X,
+  AlertCircle,
+  Plus,
+  Trash2,
+  Edit2,
+  BookOpen,
+  Lock,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 
 export default function AttendanceSystem() {
+  // Authentication States
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [showLogin, setShowLogin] = useState(true);
+
+  // UI States
   const [activeTab, setActiveTab] = useState('attendance');
   const [notification, setNotification] = useState(null);
+  const [showPasswordField, setShowPasswordField] = useState({});
 
+  // Data States
   const [admins, setAdmins] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [students, setStudents] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState({});
 
+  // Form States
   const [studentForm, setStudentForm] = useState({ name: '', rollNo: '', email: '' });
   const [teacherForm, setTeacherForm] = useState({ name: '', email: '', subject: '' });
   const [adminForm, setAdminForm] = useState({ name: '', email: '' });
   const [subjectForm, setSubjectForm] = useState({ name: '', code: '' });
   const [credentialForm, setCredentialForm] = useState({ userId: '', password: '', role: '' });
-  const [showPasswordFields, setShowPasswordFields] = useState({});
 
+  // Edit States
   const [editingStudent, setEditingStudent] = useState(null);
   const [editingTeacher, setEditingTeacher] = useState(null);
 
+  // Utility Functions
   const showNotification = (message, type = 'info') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 5000);
@@ -44,6 +66,7 @@ export default function AttendanceSystem() {
     setActiveTab('attendance');
   };
 
+  // Admin Functions
   const addAdmin = () => {
     if (!adminForm.name || !adminForm.email) {
       showNotification('Please fill all fields', 'error');
@@ -54,7 +77,7 @@ export default function AttendanceSystem() {
       name: adminForm.name,
       email: adminForm.email,
       password: null,
-      status: 'Inactive'
+      status: 'Inactive',
     };
     setAdmins([...admins, newAdmin]);
     setAdminForm({ name: '', email: '' });
@@ -62,10 +85,11 @@ export default function AttendanceSystem() {
   };
 
   const deleteAdmin = (id) => {
-    setAdmins(admins.filter(a => a.id !== id));
+    setAdmins(admins.filter((a) => a.id !== id));
     showNotification('Admin deleted successfully', 'success');
   };
 
+  // Teacher Functions
   const addTeacher = () => {
     if (!teacherForm.name || !teacherForm.email) {
       showNotification('Please fill all fields', 'error');
@@ -75,9 +99,9 @@ export default function AttendanceSystem() {
       id: Date.now(),
       name: teacherForm.name,
       email: teacherForm.email,
-      subject: teacherForm.subject,
+      subject: teacherForm.subject || 'Not Assigned',
       password: null,
-      status: 'Inactive'
+      status: 'Inactive',
     };
     setTeachers([...teachers, newTeacher]);
     setTeacherForm({ name: '', email: '', subject: '' });
@@ -89,24 +113,35 @@ export default function AttendanceSystem() {
       showNotification('Please fill all fields', 'error');
       return;
     }
-    setTeachers(teachers.map(t =>
-      t.id === editingTeacher.id
-        ? { ...t, name: teacherForm.name, email: teacherForm.email, subject: teacherForm.subject }
-        : t
-    ));
+    setTeachers(
+      teachers.map((t) =>
+        t.id === editingTeacher.id
+          ? {
+              ...t,
+              name: teacherForm.name,
+              email: teacherForm.email,
+              subject: teacherForm.subject || t.subject,
+            }
+          : t
+      )
+    );
     setEditingTeacher(null);
     setTeacherForm({ name: '', email: '', subject: '' });
     showNotification('Teacher updated successfully', 'success');
   };
 
   const deleteTeacher = (id) => {
-    setTeachers(teachers.filter(t => t.id !== id));
+    setTeachers(teachers.filter((t) => t.id !== id));
     showNotification('Teacher deleted successfully', 'success');
   };
 
   const startEditTeacher = (teacher) => {
     setEditingTeacher(teacher);
-    setTeacherForm({ name: teacher.name, email: teacher.email, subject: teacher.subject });
+    setTeacherForm({
+      name: teacher.name,
+      email: teacher.email,
+      subject: teacher.subject,
+    });
   };
 
   const cancelEditTeacher = () => {
@@ -114,12 +149,13 @@ export default function AttendanceSystem() {
     setTeacherForm({ name: '', email: '', subject: '' });
   };
 
+  // Student Functions
   const addStudent = () => {
     if (!studentForm.name || !studentForm.rollNo) {
       showNotification('Please fill all fields', 'error');
       return;
     }
-    if (students.some(s => s.rollNo === studentForm.rollNo)) {
+    if (students.some((s) => s.rollNo === studentForm.rollNo)) {
       showNotification('Roll number already exists', 'error');
       return;
     }
@@ -127,13 +163,13 @@ export default function AttendanceSystem() {
       id: Date.now(),
       name: studentForm.name,
       rollNo: studentForm.rollNo,
-      email: studentForm.email,
+      email: studentForm.email || 'Not Provided',
       attendance: 0,
       password: null,
-      status: 'Inactive'
+      status: 'Inactive',
     };
     setStudents([...students, newStudent]);
-    setAttendanceRecords(prev => ({ ...prev, [newStudent.id]: 'unmarked' }));
+    setAttendanceRecords((prev) => ({ ...prev, [newStudent.id]: 'unmarked' }));
     setStudentForm({ name: '', rollNo: '', email: '' });
     showNotification('Student added successfully', 'success');
   };
@@ -143,18 +179,25 @@ export default function AttendanceSystem() {
       showNotification('Please fill all fields', 'error');
       return;
     }
-    setStudents(students.map(s =>
-      s.id === editingStudent.id
-        ? { ...s, name: studentForm.name, rollNo: studentForm.rollNo, email: studentForm.email }
-        : s
-    ));
+    setStudents(
+      students.map((s) =>
+        s.id === editingStudent.id
+          ? {
+              ...s,
+              name: studentForm.name,
+              rollNo: studentForm.rollNo,
+              email: studentForm.email || s.email,
+            }
+          : s
+      )
+    );
     setEditingStudent(null);
     setStudentForm({ name: '', rollNo: '', email: '' });
     showNotification('Student updated successfully', 'success');
   };
 
   const deleteStudent = (id) => {
-    setStudents(students.filter(s => s.id !== id));
+    setStudents(students.filter((s) => s.id !== id));
     const newRecords = { ...attendanceRecords };
     delete newRecords[id];
     setAttendanceRecords(newRecords);
@@ -163,7 +206,11 @@ export default function AttendanceSystem() {
 
   const startEditStudent = (student) => {
     setEditingStudent(student);
-    setStudentForm({ name: student.name, rollNo: student.rollNo, email: student.email });
+    setStudentForm({
+      name: student.name,
+      rollNo: student.rollNo,
+      email: student.email,
+    });
   };
 
   const cancelEditStudent = () => {
@@ -171,19 +218,20 @@ export default function AttendanceSystem() {
     setStudentForm({ name: '', rollNo: '', email: '' });
   };
 
+  // Subject Functions
   const addSubject = () => {
     if (!subjectForm.name || !subjectForm.code) {
       showNotification('Please fill all fields', 'error');
       return;
     }
-    if (subjects.some(s => s.code === subjectForm.code)) {
+    if (subjects.some((s) => s.code === subjectForm.code)) {
       showNotification('Subject code already exists', 'error');
       return;
     }
     const newSubject = {
       id: Date.now(),
       name: subjectForm.name,
-      code: subjectForm.code
+      code: subjectForm.code,
     };
     setSubjects([...subjects, newSubject]);
     setSubjectForm({ name: '', code: '' });
@@ -191,58 +239,80 @@ export default function AttendanceSystem() {
   };
 
   const deleteSubject = (id) => {
-    setSubjects(subjects.filter(s => s.id !== id));
+    setSubjects(subjects.filter((s) => s.id !== id));
     showNotification('Subject deleted successfully', 'success');
   };
 
+  // Credential Functions
   const setCredentials = () => {
     if (!credentialForm.userId || !credentialForm.password || !credentialForm.role) {
       showNotification('Please fill all fields', 'error');
       return;
     }
 
+    const userId = parseInt(credentialForm.userId);
+
     if (credentialForm.role === 'teacher') {
-      setTeachers(teachers.map(t =>
-        t.id === parseInt(credentialForm.userId)
-          ? { ...t, password: credentialForm.password, status: 'Active' }
-          : t
-      ));
+      setTeachers(
+        teachers.map((t) =>
+          t.id === userId ? { ...t, password: credentialForm.password, status: 'Active' } : t
+        )
+      );
     } else if (credentialForm.role === 'student') {
-      setStudents(students.map(s =>
-        s.id === parseInt(credentialForm.userId)
-          ? { ...s, password: credentialForm.password, status: 'Active' }
-          : s
-      ));
+      setStudents(
+        students.map((s) =>
+          s.id === userId ? { ...s, password: credentialForm.password, status: 'Active' } : s
+        )
+      );
     } else if (credentialForm.role === 'admin') {
-      setAdmins(admins.map(a =>
-        a.id === parseInt(credentialForm.userId)
-          ? { ...a, password: credentialForm.password, status: 'Active' }
-          : a
-      ));
+      setAdmins(
+        admins.map((a) =>
+          a.id === userId ? { ...a, password: credentialForm.password, status: 'Active' } : a
+        )
+      );
     }
+
     showNotification('Credentials set successfully', 'success');
     setCredentialForm({ userId: '', password: '', role: '' });
   };
 
+  // Attendance Functions
   const markAttendance = (studentId, status) => {
-    setAttendanceRecords(prev => ({
+    setAttendanceRecords((prev) => ({
       ...prev,
-      [studentId]: status
+      [studentId]: status,
     }));
     showNotification(`Attendance marked: ${status}`, 'success');
   };
 
-  const NotificationDisplay = () => notification && (
-    <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center gap-2 ${
-      notification.type === 'success' ? 'bg-green-500' :
-      notification.type === 'warning' ? 'bg-yellow-500' :
-      notification.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-    } text-white`}>
-      <AlertCircle className="w-5 h-5" />
-      {notification.message}
+  // Component: Notification Display
+  const NotificationDisplay = () =>
+    notification && (
+      <div
+        className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center gap-2 ${
+          notification.type === 'success'
+            ? 'bg-green-500'
+            : notification.type === 'warning'
+            ? 'bg-yellow-500'
+            : notification.type === 'error'
+            ? 'bg-red-500'
+            : 'bg-blue-500'
+        } text-white`}
+      >
+        <AlertCircle className="w-5 h-5" />
+        {notification.message}
+      </div>
+    );
+
+  // Component: Empty State
+  const EmptyState = ({ icon: Icon, message }) => (
+    <div className="text-center py-12 text-gray-500">
+      <Icon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+      <p>{message}</p>
     </div>
   );
 
+  // ============ LOGIN PAGE ============
   if (showLogin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -282,10 +352,13 @@ export default function AttendanceSystem() {
     );
   }
 
+  // ============ ADMIN DASHBOARD ============
   if (userRole === 'admin') {
     return (
       <div className="min-h-screen bg-gray-50">
         <NotificationDisplay />
+
+        {/* Header */}
         <header className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
@@ -307,10 +380,11 @@ export default function AttendanceSystem() {
           </div>
         </header>
 
+        {/* Tabs */}
         <div className="bg-white border-b">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex gap-4 overflow-x-auto">
-              {['admins', 'teachers', 'students', 'credentials', 'subjects'].map(tab => (
+              {['admins', 'teachers', 'students', 'credentials', 'subjects'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -325,7 +399,9 @@ export default function AttendanceSystem() {
           </div>
         </div>
 
+        {/* Content */}
         <div className="max-w-7xl mx-auto px-4 py-8">
+          {/* Admins Tab */}
           {activeTab === 'admins' && (
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Manage Admins</h2>
@@ -357,18 +433,24 @@ export default function AttendanceSystem() {
               </div>
 
               {admins.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <p>No admins added yet</p>
-                </div>
+                <EmptyState icon={Users} message="No admins added yet" />
               ) : (
                 <div className="space-y-2">
-                  {admins.map(admin => (
-                    <div key={admin.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  {admins.map((admin) => (
+                    <div
+                      key={admin.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                    >
                       <div>
                         <p className="font-medium text-gray-800">{admin.name}</p>
                         <p className="text-sm text-gray-500">{admin.email}</p>
-                        <span className={`text-xs mt-1 px-2 py-1 rounded ${admin.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        <span
+                          className={`text-xs mt-1 px-2 py-1 rounded inline-block ${
+                            admin.status === 'Active'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                          }`}
+                        >
                           {admin.status}
                         </span>
                       </div>
@@ -385,6 +467,7 @@ export default function AttendanceSystem() {
             </div>
           )}
 
+          {/* Teachers Tab */}
           {activeTab === 'teachers' && (
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Manage Teachers</h2>
@@ -444,19 +527,25 @@ export default function AttendanceSystem() {
               </div>
 
               {teachers.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <p>No teachers added yet</p>
-                </div>
+                <EmptyState icon={Users} message="No teachers added yet" />
               ) : (
                 <div className="space-y-2">
-                  {teachers.map(teacher => (
-                    <div key={teacher.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  {teachers.map((teacher) => (
+                    <div
+                      key={teacher.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                    >
                       <div>
                         <p className="font-medium text-gray-800">{teacher.name}</p>
                         <p className="text-sm text-gray-500">{teacher.email}</p>
-                        {teacher.subject && <p className="text-sm text-gray-500">Subject: {teacher.subject}</p>}
-                        <span className={`text-xs mt-1 px-2 py-1 rounded ${teacher.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        <p className="text-sm text-gray-500">Subject: {teacher.subject}</p>
+                        <span
+                          className={`text-xs mt-1 px-2 py-1 rounded inline-block ${
+                            teacher.status === 'Active'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                          }`}
+                        >
                           {teacher.status}
                         </span>
                       </div>
@@ -481,6 +570,7 @@ export default function AttendanceSystem() {
             </div>
           )}
 
+          {/* Students Tab */}
           {activeTab === 'students' && (
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Manage Students</h2>
@@ -540,18 +630,26 @@ export default function AttendanceSystem() {
               </div>
 
               {students.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <p>No students added yet</p>
-                </div>
+                <EmptyState icon={Users} message="No students added yet" />
               ) : (
                 <div className="space-y-2">
-                  {students.map(student => (
-                    <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  {students.map((student) => (
+                    <div
+                      key={student.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                    >
                       <div>
                         <p className="font-medium text-gray-800">{student.name}</p>
-                        <p className="text-sm text-gray-500">{student.rollNo} • {student.email}</p>
-                        <span className={`text-xs mt-1 px-2 py-1 rounded ${student.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        <p className="text-sm text-gray-500">
+                          {student.rollNo} • {student.email}
+                        </p>
+                        <span
+                          className={`text-xs mt-1 px-2 py-1 rounded inline-block ${
+                            student.status === 'Active'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                          }`}
+                        >
                           {student.status}
                         </span>
                       </div>
@@ -576,6 +674,7 @@ export default function AttendanceSystem() {
             </div>
           )}
 
+          {/* Credentials Tab */}
           {activeTab === 'credentials' && (
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Create Login Credentials</h2>
@@ -600,31 +699,50 @@ export default function AttendanceSystem() {
                       className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     >
                       <option value="">Select {credentialForm.role}</option>
-                      {credentialForm.role === 'admin' && admins.map(a => (
-                        <option key={a.id} value={a.id}>{a.name}</option>
-                      ))}
-                      {credentialForm.role === 'teacher' && teachers.map(t => (
-                        <option key={t.id} value={t.id}>{t.name}</option>
-                      ))}
-                      {credentialForm.role === 'student' && students.map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
+                      {credentialForm.role === 'admin' &&
+                        admins.map((a) => (
+                          <option key={a.id} value={a.id}>
+                            {a.name}
+                          </option>
+                        ))}
+                      {credentialForm.role === 'teacher' &&
+                        teachers.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name}
+                          </option>
+                        ))}
+                      {credentialForm.role === 'student' &&
+                        students.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>
+                        ))}
                     </select>
                   )}
 
                   <div className="relative">
                     <input
-                      type={showPasswordFields[credentialForm.userId] ? 'text' : 'password'}
+                      type={showPasswordField[credentialForm.userId] ? 'text' : 'password'}
                       placeholder="Enter Password"
                       value={credentialForm.password}
                       onChange={(e) => setCredentialForm({ ...credentialForm, password: e.target.value })}
                       className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent w-full"
                     />
                     <button
-                      onClick={() => setShowPasswordFields({ ...showPasswordFields, [credentialForm.userId]: !showPasswordFields[credentialForm.userId] })}
+                      type="button"
+                      onClick={() =>
+                        setShowPasswordField({
+                          ...showPasswordField,
+                          [credentialForm.userId]: !showPasswordField[credentialForm.userId],
+                        })
+                      }
                       className="absolute right-3 top-3 text-gray-600 hover:text-gray-800"
                     >
-                      {showPasswordFields[credentialForm.userId] ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showPasswordField[credentialForm.userId] ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -637,20 +755,36 @@ export default function AttendanceSystem() {
                 </button>
               </div>
 
-              {(credentialForm.role === 'admin' ? admins : credentialForm.role === 'teacher' ? teachers : students).length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <p>No users in this role yet</p>
-                </div>
+              {(credentialForm.role === 'admin'
+                ? admins
+                : credentialForm.role === 'teacher'
+                ? teachers
+                : students
+              ).length === 0 ? (
+                <EmptyState icon={Users} message="No users in this role yet" />
               ) : (
                 <div className="space-y-2">
                   <h3 className="font-semibold text-gray-800 mb-4">Current Users</h3>
-                  {(credentialForm.role === 'admin' ? admins : credentialForm.role === 'teacher' ? teachers : students).map(user => (
-                    <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  {(credentialForm.role === 'admin'
+                    ? admins
+                    : credentialForm.role === 'teacher'
+                    ? teachers
+                    : students
+                  ).map((user) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                    >
                       <div>
                         <p className="font-medium text-gray-800">{user.name}</p>
                         <p className="text-sm text-gray-500">{user.email}</p>
-                        <span className={`text-xs mt-1 px-2 py-1 rounded ${user.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        <span
+                          className={`text-xs mt-1 px-2 py-1 rounded inline-block ${
+                            user.status === 'Active'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                          }`}
+                        >
                           {user.status}
                         </span>
                       </div>
@@ -661,6 +795,7 @@ export default function AttendanceSystem() {
             </div>
           )}
 
+          {/* Subjects Tab */}
           {activeTab === 'subjects' && (
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Manage Subjects</h2>
@@ -692,14 +827,14 @@ export default function AttendanceSystem() {
               </div>
 
               {subjects.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <p>No subjects added yet</p>
-                </div>
+                <EmptyState icon={BookOpen} message="No subjects added yet" />
               ) : (
                 <div className="space-y-2">
-                  {subjects.map(subject => (
-                    <div key={subject.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  {subjects.map((subject) => (
+                    <div
+                      key={subject.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                    >
                       <div>
                         <p className="font-medium text-gray-800">{subject.name}</p>
                         <p className="text-sm text-gray-500">Code: {subject.code}</p>
@@ -721,10 +856,13 @@ export default function AttendanceSystem() {
     );
   }
 
+  // ============ TEACHER DASHBOARD ============
   if (userRole === 'teacher') {
     return (
       <div className="min-h-screen bg-gray-50">
         <NotificationDisplay />
+
+        {/* Header */}
         <header className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
@@ -746,19 +884,20 @@ export default function AttendanceSystem() {
           </div>
         </header>
 
+        {/* Content */}
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Mark Attendance</h2>
-            
+
             {students.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <p>No students available</p>
-              </div>
+              <EmptyState icon={Users} message="No students available" />
             ) : (
               <div className="space-y-3">
-                {students.map(student => (
-                  <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                {students.map((student) => (
+                  <div
+                    key={student.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                  >
                     <div>
                       <p className="font-medium text-gray-800">{student.name}</p>
                       <p className="text-sm text-gray-500">Roll: {student.rollNo}</p>
@@ -797,12 +936,15 @@ export default function AttendanceSystem() {
     );
   }
 
+  // ============ STUDENT DASHBOARD ============
   if (userRole === 'student') {
-    const currentStudent = students.find(s => s.name === currentUser);
-    
+    const currentStudent = students.find((s) => s.name === currentUser);
+
     return (
       <div className="min-h-screen bg-gray-50">
         <NotificationDisplay />
+
+        {/* Header */}
         <header className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
@@ -824,6 +966,7 @@ export default function AttendanceSystem() {
           </div>
         </header>
 
+        {/* Content */}
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -833,7 +976,9 @@ export default function AttendanceSystem() {
                 </div>
                 <div>
                   <p className="text-gray-600 text-sm">Roll Number</p>
-                  <p className="text-2xl font-bold text-gray-800">{currentStudent?.rollNo || 'N/A'}</p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {currentStudent?.rollNo || 'N/A'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -846,9 +991,11 @@ export default function AttendanceSystem() {
                 <div>
                   <p className="text-gray-600 text-sm">Attendance Status</p>
                   <p className="text-2xl font-bold text-gray-800">
-                    {attendanceRecords[currentStudent?.id] === 'Present' ? '✓ Present' : 
-                     attendanceRecords[currentStudent?.id] === 'Absent' ? '✗ Absent' : 
-                     'Not Marked'}
+                    {attendanceRecords[currentStudent?.id] === 'Present'
+                      ? '✓ Present'
+                      : attendanceRecords[currentStudent?.id] === 'Absent'
+                      ? '✗ Absent'
+                      : 'Not Marked'}
                   </p>
                 </div>
               </div>
@@ -868,9 +1015,13 @@ export default function AttendanceSystem() {
               </div>
               <div>
                 <p className="text-gray-600 text-sm">Account Status</p>
-                <span className={`text-sm px-3 py-1 rounded-full inline-block ${
-                  currentStudent?.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                }`}>
+                <span
+                  className={`text-sm px-3 py-1 rounded-full inline-block ${
+                    currentStudent?.status === 'Active'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-yellow-100 text-yellow-700'
+                  }`}
+                >
                   {currentStudent?.status || 'N/A'}
                 </span>
               </div>
